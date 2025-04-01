@@ -81,7 +81,7 @@ public class KafkaConsumerService {
                     kafkaProducerService.sendTerminalEventErrorDTO(
                             TerminalEventErrorDTO.builder()
                                     .terminalId((String) event.getData().get("terminal_id"))
-                                    .timestamp(timestamp)
+                                    .timestamp(event.getTimestamp())
                                     .data(event.getData())
                                     .message("timestamp error : " +e.getMessage())
                                     .build()
@@ -101,7 +101,7 @@ public class KafkaConsumerService {
                     kafkaProducerService.sendTerminalEventErrorDTO(
                             TerminalEventErrorDTO.builder()
                                     .terminalId((String) event.getData().get("terminal_id"))
-                                    .timestamp(timestamp)
+                                    .timestamp(event.getTimestamp())
                                     .data(event.getData())
                                     .message("updated_on error : " +e.getMessage())
                                     .build()
@@ -109,11 +109,23 @@ public class KafkaConsumerService {
                     return;
                 }
             }
-            kafkaProducerService.sendTerminalEventDTO(TerminalEventDTO.builder()
-                                    .terminalId((String) event.getData().get("terminal_id"))
-                                    .timestamp(timestamp)
-                                    .data(event.getData())
-                                    .build());
+            if (timestamp != null){
+                kafkaProducerService.sendTerminalEventDTO(TerminalEventDTO.builder()
+                        .terminalId((String) event.getData().get("terminal_id"))
+                        .timestamp(timestamp)
+                        .data(event.getData())
+                        .build());
+            }else {
+                kafkaProducerService.sendTerminalEventErrorDTO(
+                        TerminalEventErrorDTO.builder()
+                                .terminalId((String) event.getData().get("terminal_id"))
+                                .timestamp(event.getTimestamp())
+                                .data(event.getData())
+                                .message("timestamp null")
+                                .build()
+                );
+            }
+
         } else {
             for (Map.Entry<String, Object> entry : event.getData().entrySet()) {
                 kafkaProducerService.sendRawProcessDTO(
