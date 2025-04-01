@@ -1,16 +1,6 @@
 server:
   port: 8080
-  error:
-    include-stacktrace: never
-  servlet:
-    session:
-      cookie:
-        http-only: true
   shutdown: graceful
-
-# 1 days = 1 * 24 * 60 * 60
-cookie:
-  maxAge: 86400
 
 spring:
   application:
@@ -23,13 +13,8 @@ spring:
     use-legacy-processing: true
   jmx:
     enabled: true
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: http://agusramdan.tech:9000
   main:
-    lazy-initialization: true
+    lazy-initialization: false
 
   kafka:
     consumer:
