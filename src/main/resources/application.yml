@@ -17,8 +17,8 @@ spring:
     lazy-initialization: false
 
   kafka:
+    bootstrap-servers: kafka:9092
     consumer:
-      bootstrap-servers: kafka:9092
       group-id: group-cdm-event-1
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
