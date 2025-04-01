@@ -15,6 +15,10 @@ cookie:
 spring:
   application:
     name: app-cdt-event-service
+  threads:
+    virtual:
+      enabled: true
+  thread-executor: virtual
   config:
     use-legacy-processing: true
   jmx:
