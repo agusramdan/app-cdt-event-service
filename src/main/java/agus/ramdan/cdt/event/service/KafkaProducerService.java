@@ -12,7 +12,7 @@ public class KafkaProducerService {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    public void send(EventLogDTO event) {
+    public void sendTerminalEventDTO(EventLogDTO event) {
         kafkaTemplate.send("event-log-dto-topic", event);
     }
 //    public void send(RawDTO event) {
@@ -24,22 +24,27 @@ public class KafkaProducerService {
 //    public void send(GatewayCallbackDTO event) {
 //        kafkaTemplate.send("gateway-callback-topic", event);
 //    }
-    public void send(RawListDTO event) {
+    public void sendRawListDTO(RawListDTO event) {
         kafkaTemplate.send("raw-list-dto-topic", event);
     }
-    public void send(RawMapDTO event) {
+    public void sendRawMapDTO(RawMapDTO event) {
         kafkaTemplate.send("raw-map-dto-topic", event);
     }
-    public void send(RawProcessDTO process) {
+    public void sendRawProcessDTO(RawProcessDTO process) {
         kafkaTemplate.send("raw-process-dto-topic", process);
     }
 
-    public void send(DropDTO build) {
+    public void sendDropDTO(DropDTO build) {
         kafkaTemplate.send("drop-data-topic", build);
     }
 
-    public void send(TerminalEventDTO terminalEventDto) {
+    public void sendTerminalEventDTO(TerminalEventDTO terminalEventDto) {
         kafkaTemplate.send("terminal-event-dto-topic", terminalEventDto);
     }
+    public void sendTerminalEventErrorDTO(TerminalEventErrorDTO terminalEventDto) {
+        kafkaTemplate.send("error-terminal-event-dto-topic", terminalEventDto);
+    }
+
+
 
 }

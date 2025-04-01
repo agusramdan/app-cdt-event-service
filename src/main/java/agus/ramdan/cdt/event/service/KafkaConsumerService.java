@@ -1,9 +1,5 @@
 package agus.ramdan.cdt.event.service;
 
-//import agus.ramdan.cdt.event.repository.DropDataRepository;
-//import agus.ramdan.cdt.event.repository.EventLogRepository;
-//import agus.ramdan.cdt.event.repository.RawDataRepository;
-//import agus.ramdan.cdt.event.repository.TerminalStatusRepository;
 import agus.ramdan.cdt.event.dto.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +10,6 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -22,11 +17,6 @@ public class KafkaConsumerService {
 
     private final KafkaProducerService kafkaProducerService;
 
-//    @KafkaListener(topics = "raw-data-topic")
-//    public void consumeRawData(String event) {
-//        log.info("Consumed RawData: {}", event);
-//    }
-//
     @KafkaListener(topics = "raw-dto-topic")
     public void consumeRawData(RawDTO event) {
         log.info("Consumed RawData: {}", event.getRequestId());
@@ -35,7 +25,7 @@ public class KafkaConsumerService {
                 .timestamp(event.getTimestamp())
                 .data(event.getData())
                 .build();
-        kafkaProducerService.send(prosess);
+        kafkaProducerService.sendRawProcessDTO(prosess);
     }
 
     @KafkaListener(topics = "raw-process-dto-topic")
@@ -43,7 +33,7 @@ public class KafkaConsumerService {
         log.info("Consumed RawProcessDto: {}", event.getRequestId());
         val data = event.getData();
         if (data instanceof Map){
-            kafkaProducerService.send(
+            kafkaProducerService.sendRawMapDTO(
                     RawMapDTO.builder()
                             .requestId(event.getRequestId())
                             .timestamp(event.getTimestamp())
@@ -52,7 +42,7 @@ public class KafkaConsumerService {
                             .build()
             );
         }else if (data instanceof Iterable){
-            kafkaProducerService.send(
+            kafkaProducerService.sendRawListDTO(
                     RawListDTO.builder()
                             .requestId(event.getRequestId())
                             .timestamp(event.getTimestamp())
@@ -61,8 +51,8 @@ public class KafkaConsumerService {
                             .build()
             );
         } else {
-            log.error("Data not valid");
-            kafkaProducerService.send(
+            log.error("Data not valid request_id={},level={},data={}",event.getRequestId(),event.getLevel(),data);
+            kafkaProducerService.sendDropDTO(
                     DropDTO.builder()
                             .requestId(event.getRequestId())
                             .timestamp(event.getTimestamp())
@@ -77,23 +67,56 @@ public class KafkaConsumerService {
     @KafkaListener(topics = "raw-map-dto-topic")
     public void consumeRawMapDto(RawMapDTO event) {
         log.info("Consumed RawMapDto: {}", event.getRequestId());
-        if(event.getData().containsKey("terminal_id") && event.getData().containsKey("timestamp")) {
-            kafkaProducerService.send(
-                    event.getData().get("timestamp") instanceof Long ?
-                            TerminalEventDTO.builder()
+        if(event.getData().containsKey("terminal_id") && (event.getData().containsKey("timestamp") || event.getData().containsKey("updated_on"))){
+            Long timestamp =null;
+            if (event.getData().containsKey("timestamp")) {
+                try {
+                    Object t = event.getData().get("timestamp");
+                    if (t instanceof Long){
+                        timestamp = (Long) t;
+                    }else {
+                        timestamp = Long.parseLong(t.toString());
+                    }
+                }catch (Exception e){
+                    kafkaProducerService.sendTerminalEventErrorDTO(
+                            TerminalEventErrorDTO.builder()
                                     .terminalId((String) event.getData().get("terminal_id"))
-                                    .timestamp((Long) event.getData().get("timestamp"))
+                                    .timestamp(timestamp)
                                     .data(event.getData())
-                                    .build() :
-                            TerminalEventDTO.builder()
-                                    .terminalId((String) event.getData().get("terminal_id"))
-                                    .timestamp(Long.parseLong(event.getData().get("timestamp").toString()))
-                                    .data(event.getData())
+                                    .message("timestamp error : " +e.getMessage())
                                     .build()
-            );
+                    );
+                    return;
+                }
+
+            }else if (event.getData().containsKey("updated_on")) {
+                Object t = event.getData().get("updated_on");
+                try {
+                    if (t instanceof Long) {
+                        timestamp = (Long) t;
+                    } else {
+                        timestamp = Long.parseLong(t.toString());
+                    }
+                }catch (Exception e){
+                    kafkaProducerService.sendTerminalEventErrorDTO(
+                            TerminalEventErrorDTO.builder()
+                                    .terminalId((String) event.getData().get("terminal_id"))
+                                    .timestamp(timestamp)
+                                    .data(event.getData())
+                                    .message("updated_on error : " +e.getMessage())
+                                    .build()
+                    );
+                    return;
+                }
+            }
+            kafkaProducerService.sendTerminalEventDTO(TerminalEventDTO.builder()
+                                    .terminalId((String) event.getData().get("terminal_id"))
+                                    .timestamp(timestamp)
+                                    .data(event.getData())
+                                    .build());
         } else {
             for (Map.Entry<String, Object> entry : event.getData().entrySet()) {
-                kafkaProducerService.send(
+                kafkaProducerService.sendRawProcessDTO(
                         RawProcessDTO.builder()
                                 .requestId(event.getRequestId())
                                 .timestamp(event.getTimestamp())
@@ -109,7 +132,7 @@ public class KafkaConsumerService {
     public void consumeRawListDto(RawListDTO event) {
         log.info("Consumed RawListDto: {}", event.getRequestId());
         for (Object data : event.getData()) {
-            kafkaProducerService.send(
+            kafkaProducerService.sendRawProcessDTO(
                     RawProcessDTO.builder()
                             .requestId(event.getRequestId())
                             .timestamp(event.getTimestamp())
