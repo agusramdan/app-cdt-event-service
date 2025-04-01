@@ -24,6 +24,8 @@ jobs:
 
       - name: Build project with Maven
         run: mvn clean package
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract Version from pom.xml
         id: extract_version
