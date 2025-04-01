@@ -80,6 +80,7 @@ public class KafkaConsumerService {
                 }catch (Exception e){
                     kafkaProducerService.sendTerminalEventErrorDTO(
                             TerminalEventErrorDTO.builder()
+                                    .requestId(event.getRequestId())
                                     .terminalId((String) event.getData().get("terminal_id"))
                                     .timestamp(event.getTimestamp())
                                     .data(event.getData())
@@ -100,6 +101,7 @@ public class KafkaConsumerService {
                 }catch (Exception e){
                     kafkaProducerService.sendTerminalEventErrorDTO(
                             TerminalEventErrorDTO.builder()
+                                    .requestId(event.getRequestId())
                                     .terminalId((String) event.getData().get("terminal_id"))
                                     .timestamp(event.getTimestamp())
                                     .data(event.getData())
@@ -111,6 +113,7 @@ public class KafkaConsumerService {
             }
             if (timestamp != null){
                 kafkaProducerService.sendTerminalEventDTO(TerminalEventDTO.builder()
+                        .requestId(event.getRequestId())
                         .terminalId((String) event.getData().get("terminal_id"))
                         .timestamp(timestamp)
                         .data(event.getData())
@@ -118,6 +121,7 @@ public class KafkaConsumerService {
             }else {
                 kafkaProducerService.sendTerminalEventErrorDTO(
                         TerminalEventErrorDTO.builder()
+                                .requestId(event.getRequestId())
                                 .terminalId((String) event.getData().get("terminal_id"))
                                 .timestamp(event.getTimestamp())
                                 .data(event.getData())
